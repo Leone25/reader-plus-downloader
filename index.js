@@ -8,7 +8,7 @@ const fs = require('fs');
 
     let baseUrl = prompt("Input base url:"); 
 
-    let headers = {"token": prompt("Input token:"), "appid": "56dd9b6c1d40e68e859eedb1"};
+    // let headers = {"token": prompt("Input token:"), "appid": "56dd9b6c1d40e68e859eedb1"};
 
     let pageNumber = prompt("Input page number:")
     
