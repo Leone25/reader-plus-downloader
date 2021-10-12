@@ -16,7 +16,7 @@ node index.js
 ```
 https://**************.cloudfront.net/resources/products/epubs/generated/********-****-****-****-************/foxit-assets/pages/page
 ```
-~~5. Scroll down in the request information and look for the `token`, copy and paste that in the terminal and press enter~~
+5. ~~Scroll down in the request information and look for the `token`, copy and paste that in the terminal and press enter~~ no longer needed (it never was lol, idk why this is here)
 6. Right above the `page0` request there should be a `************************.json`, click on that, look at its content, scroll down to the bottom and input in the terminal the largest number you see on the left side
 7. The script will now start downloading your book, it may take a bit of time depending on the speed of your machine and connection
 8. Once done downloading it will ask for a file name, provide one with no special charaters or file extentions and press enter
