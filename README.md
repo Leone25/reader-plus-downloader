@@ -1,5 +1,7 @@
 # Reader+ downloader
-Download your Pearson books from Reader+ into an offline PDF. NOW WITH SUPPORT FOR BOTH PDFS AND ETEXT!!!
+Download your Pearson books from Reader+ into an offline PDF.
+
+**NOW WITH SUPPORT FOR BOTH PDFS AND ETEXT!!!**
 
 ## How to use
 
