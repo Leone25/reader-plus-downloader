@@ -1,7 +1,5 @@
 # Reader+ downloader
-Download your Pearson books from Reader+ into an offline PDF.
-
-NOTE: this app currently has no support for eText books, please use [this one](https://github.com/lucafont2/pearson-downloader) untill it's implemented
+Download your Pearson books from Reader+ into an offline PDF. NOW WITH SUPPORT FOR BOTH PDFS AND ETEXT!!!
 
 ## How to use
 
