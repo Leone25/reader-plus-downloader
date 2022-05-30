@@ -47,6 +47,8 @@ import fs from 'fs';
         process.exit(1);
     });
 
+    let iesCode = new URL(loginRedirect).searchParams.get('iesCode');
+
     const loginForm = new URLSearchParams();
     loginForm.append('grant_type', 'password');
     loginForm.append('username', email);
@@ -62,6 +64,14 @@ import fs from 'fs';
         if (res.status != 200) {
             throw new Error('Login failed');
         }
+        return res.json();
+    });
+
+    let credentails = await fetch(`https://login.pearson.com/v1/piapi/login/oidctoken?client_id=${clientId}&redirect_uri=undefined&grant_type=authorization_code&iesCode=${iesCode}`, {
+        method: 'POST',
+    }).then((res)=>{
+        if (res.status != 200)
+            throw new Error('Login failed');
         return res.json();
     });
 
@@ -100,6 +110,8 @@ import fs from 'fs';
         }
     }).then(res=>res.json());
 
+    let booklist = [];
+
     let bookshelf = await fetch(`https://api-prod.gls.pearson-intl.com/user/${user.id}/product`, {
         headers: {
             'appid': '56dd9b6c1d40e68e859eedb1',
@@ -107,15 +119,38 @@ import fs from 'fs';
         }
     }).then(res=>res.json());
 
-    if (bookshelf.length == 0) {
+    bookshelf.forEach(book=>{
+        booklist.push({
+            type: 'pdf',
+            title: book.title,
+            url: book.epubURL,
+            encpwd: book.encpwd,
+        });
+    })
+
+    let eTextBookshelf = await fetch('https://stpaperapi.prd-prsn.com/etext/v2/courseboot/convergedreader/compositeBookShelf/', {
+        headers:{
+            'x-authorization': credentails.data.access_token
+        },
+    }).then(res=>res.json());
+
+    eTextBookshelf.entries.forEach(book=>{
+        booklist.push({
+            type: 'etext',
+            title: book.title,
+            url: book.uPdfUrl,
+        });
+    });
+
+    if (booklist.length == 0) {
         console.log('No books found');
         process.exit(0);
     }
     
     console.log('Bookshelf:');
 
-    bookshelf.forEach((book, i)=>{
-        console.log(`${i}) ${book.title}`);
+    booklist.forEach((book, i)=>{
+        console.log(`[${book.type.toUpperCase()}]\t ${i}) ${book.title}`);
     });
 
     let { bookId } = await prompt.get({
@@ -126,7 +161,7 @@ import fs from 'fs';
                 pattern: /^((\d+)|e)$/,
                 message: 'Book ID must be a number',
                 conform: (value)=>{
-                    return value == 'e' || -1 < parseInt(value) < bookshelf.length;
+                    return value == 'e' || -1 < parseInt(value) < booklist.length;
                 }
             }
         }
@@ -138,32 +173,46 @@ import fs from 'fs';
         process.exit(0);
     }
 
-    let cipher = forge.cipher.createDecipher('AES-CBC', 'sDkjhfkj8yhn8gig');
-    cipher.start({iv: forge.util.createBuffer(Buffer.from([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), 'binary')});
-    cipher.update(forge.util.createBuffer(Buffer.from(bookshelf[bookId].encpwd, 'base64'), 'binary'));
-    cipher.finish();
+    if (booklist[bookId].type == 'pdf') {
+        let cipher = forge.cipher.createDecipher('AES-CBC', 'sDkjhfkj8yhn8gig');
+        cipher.start({iv: forge.util.createBuffer(Buffer.from([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), 'binary')});
+        cipher.update(forge.util.createBuffer(Buffer.from(bookshelf[bookId].encpwd, 'base64'), 'binary'));
+        cipher.finish();
 
-    //console.log(cipher.output.bytes());
+        console.log('Downloading book...');
 
-    console.log('Downloading book...');
+        let book = await fetch(bookshelf[bookId].epubURL).then(res=>res.arrayBuffer());
 
-    let book = await fetch(bookshelf[bookId].epubURL).then(res=>res.arrayBuffer());
+        let bookZip = new zip(Buffer.from(book));
 
-    //console.log(book);
-
-    //fs.writeFile("book.zip", Buffer.from(book),  "binary", function(err) { });
-
-    let bookZip = new zip(Buffer.from(book));
-
-    bookZip.list().forEach((file, i, arr)=>{
-        let pdf = bookZip.extract(file.filepath, {
-            password: cipher.output.bytes()
+        bookZip.list().forEach((file, i, arr)=>{
+            let pdf = bookZip.extract(file.filepath, {
+                password: cipher.output.bytes()
+            });
+            fs.writeFileSync(`${bookshelf[bookId].title}${arr.length>1?i:''}.pdf`, pdf, 'binary');
         });
-        fs.writeFileSync(`${bookshelf[bookId].title}${arr.length>1?i:''}.pdf`, pdf, 'binary');
-    });
+    } else if (booklist[bookId].type == 'etext') {
+        console.log('Downloading book...');
 
+        let cdnToken = fetch('https://etext.pearson.com/api/nextext-api/v1/api/nextext/eps/authtoken', {
+            headers:{
+                'x-authorization': credentails.data.access_token
+            },
+        }).then(res=>res.json());
+
+        let book = await fetch(booklist[bookId].url, {
+            headers:{
+                [cdnToken.name]: cdnToken.value
+            },
+        }).then(res=>res.arrayBuffer());
+
+        fs.writeFileSync(`${booklist[bookId].title}.pdf`, Buffer.from(book), 'binary');
+    } else {
+        console.log('Welp, this wasn\'t supposed to happen :L');
+    }
+    
     console.log('Done!');
     console.log('Consider starring on github: https://github.com/Leone25/reader-plus-downloader');
-    console.log('Goodbye!');
+    console.log('Good bye!');
 
 })();
