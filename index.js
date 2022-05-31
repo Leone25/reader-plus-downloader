@@ -11,7 +11,7 @@ import fs from 'fs';
     var schema = {
         properties: {
             email: {
-                description: 'Email: ',
+                description: 'Email/Username: ',
                 required: true
             },
             password: {
