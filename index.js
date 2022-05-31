@@ -194,7 +194,7 @@ import fs from 'fs';
     } else if (booklist[bookId].type == 'etext') {
         console.log('Downloading book...');
 
-        let cdnToken = fetch('https://etext.pearson.com/api/nextext-api/v1/api/nextext/eps/authtoken', {
+        let cdnToken = await fetch('https://etext.pearson.com/api/nextext-api/v1/api/nextext/eps/authtoken', {
             headers:{
                 'x-authorization': credentails.data.access_token
             },
