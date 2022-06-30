@@ -13,7 +13,7 @@ npm i
 ```shell
 node index.js
 ```
-3. Enter your username and password
+3. Enter your username and password (the field will look as if you are typing nothing but that's just for privacy)
 4. Select the book you wish to download from the list
 5. Wait.
 6. You are done! Enjoy your book!
