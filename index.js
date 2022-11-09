@@ -159,6 +159,7 @@ prompt.start();
       type: 'etext',
       title: book.title,
       url: book.uPdfUrl,
+      id: book.bookId,
     });
   });
 
@@ -173,9 +174,9 @@ prompt.start();
     console.log(`[${book.type.toUpperCase()}]\t ${i}) ${book.title}`);
   });
 
-  const { bookId } = await prompt.get({
+  const { bookIndex } = await prompt.get({
     properties: {
-      bookId: {
+      bookIndex: {
         description: 'Book ID [e to exit]: ',
         required: true,
         pattern: /^((\d+)|e)$/,
@@ -187,13 +188,13 @@ prompt.start();
     },
   });
 
-  if (bookId == 'e') {
+  if (bookIndex == 'e') {
     console.log('Good bye!');
     console.log('Consider starring on github: https://github.com/Leone25/reader-plus-downloader');
     process.exit(0);
   }
 
-  if (booklist[bookId].type == 'pdf') {
+  if (booklist[bookIndex].type == 'pdf') {
     const cipher = forge.cipher.createDecipher('AES-CBC', 'sDkjhfkj8yhn8gig');
     cipher.start({
       iv: forge.util.createBuffer(
@@ -202,13 +203,13 @@ prompt.start();
       ),
     });
     cipher.update(
-      forge.util.createBuffer(Buffer.from(bookshelf[bookId].encpwd, 'base64'), 'binary'),
+      forge.util.createBuffer(Buffer.from(bookshelf[bookIndex].encpwd, 'base64'), 'binary'),
     );
     cipher.finish();
 
     console.log('Downloading book...');
 
-    const book = await fetch(bookshelf[bookId].epubURL).then((res) => res.arrayBuffer());
+    const book = await fetch(bookshelf[bookIndex].epubURL).then((res) => res.arrayBuffer());
 
     const bookZip = new zip(Buffer.from(book));
 
@@ -216,27 +217,31 @@ prompt.start();
       const pdf = bookZip.extract(file.filepath, {
         password: cipher.output.bytes(),
       });
-      fs.writeFileSync(`${bookshelf[bookId].title}${arr.length > 1 ? i : ''}.pdf`, pdf, 'binary');
+      fs.writeFileSync(
+        `${bookshelf[bookIndex].title}${arr.length > 1 ? i : ''}.pdf`,
+        pdf,
+        'binary',
+      );
     });
-  } else if (booklist[bookId].type == 'etext') {
+  } else if (booklist[bookIndex].type == 'etext') {
     console.log('Downloading book...');
 
     const cdnToken = await fetch(
-      'https://etext.pearson.com/api/nextext-api/v1/api/nextext/eps/authtoken',
+      `https://etext-ise.pearson.com/marin/api/1.0/products/` + booklist[bookIndex].id + `/token`,
       {
         headers: {
-          'x-authorization': credentails.data.access_token,
+          authorization: credentails.data.token_type + ' ' + credentails.data.access_token,
         },
       },
     ).then((res) => res.json());
 
-    const book = await fetch(booklist[bookId].url, {
+    const book = await fetch(booklist[bookIndex].url, {
       headers: {
         [cdnToken.name]: cdnToken.value,
       },
     }).then((res) => res.arrayBuffer());
 
-    fs.writeFileSync(`${booklist[bookId].title}.pdf`, Buffer.from(book), 'binary');
+    fs.writeFileSync(`${booklist[bookIndex].title}.pdf`, Buffer.from(book), 'binary');
   } else {
     console.log("Welp, this wasn't supposed to happen :L");
   }
