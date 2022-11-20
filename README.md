@@ -1,7 +1,14 @@
 # Reader+ downloader
 Download your Pearson books from Reader+ into an offline PDF.
 
-**NOW WITH SUPPORT FOR BOTH PDFS AND ETEXT!!!**
+<br><br><br><br><br><br><br><br><br>
+
+**ARCHIVE: please read**
+
+Hi, unfotunately some recent update to the the Pearson website has caused this script to stop working propperly in a way that can't be fixed with current techniques, this means that this script WILL NOT BE UPDATED anymore and I WILL NOT PROVIDE ANY SUPPORT in the issue section. You can still try to use this script, that's why it's a public archive but don't be surprised if it doesn't. Will an alternative be created? Probably, but for now no. I'm sorry for the inconvenience.
+
+<br><br><br><br><br><br><br><br><br>
+
 
 ## How to use
 
